@@ -1,1 +1,47 @@
+from decimal import Decimal, ROUND_HALF_UP
 
+BASE_RATE = Decimal("32.00")
+FAT_STEP_RATE = Decimal("0.45")
+BONUS_RATE = Decimal("0.50")
+BONUS_LIMIT = Decimal("500")
+
+def get_rate(season, fat):
+    if season.lower() in ("april", "may", "june"):
+        base = BASE_RATE
+        step_rate = FAT_STEP_RATE
+    else:
+        base = BASE_RATE
+        step_rate = FAT_STEP_RATE
+
+    return base + fat * step_rate
+
+def calculate_payment(litres, fat, snf, season, ten_day_total):
+    litres = Decimal(str(litres))
+    fat = Decimal(str(fat))
+    snf = Decimal(str(snf))
+    ten_day_total = Decimal(str(ten_day_total))
+
+    if litres <= 0 or fat < 0 or snf < 0:
+        raise ValueError("Invalid milk readings or quantity")
+
+    rate = get_rate(season, fat)
+    bonus = BONUS_RATE if ten_day_total > BONUS_LIMIT else Decimal("0.00")
+
+    total_rate = rate + bonus
+    payment = litres * total_rate
+
+    return payment.quantize(
+        Decimal("0.01"),
+        rounding=ROUND_HALF_UP
+    )
+
+# Example
+payment = calculate_payment(
+    litres=20,
+    fat=4.25,
+    snf=8.50,
+    season="April",
+    ten_day_total=520
+)
+
+print("Total payment: Rs.", payment)
