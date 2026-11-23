@@ -1,222 +1,6 @@
 
-# PYTHON PROGRAMMING ASSIGNMENT - Q1 TO Q7
-# B. VINAY KUMAR
-
 import time
 from statistics import mean
-from functools import lru_cache
-
-print("=" * 60)
-print("Q1 - ELECTRICITY SUBSIDY")
-print("=" * 60)
-
-households = [
-    (99, False, False), (100, True, False),
-    (101, True, False), (150, False, False),
-    (200, True, False), (201, False, True),
-    (250, True, False), (80, False, True)
-]
-
-for units, ration, senior in households:
-    if units <= 100:
-        decision = "Full subsidy"
-    elif units <= 200:
-        decision = "Partial subsidy" if ration else "No subsidy"
-    else:
-        decision = "Special subsidy" if senior else "No subsidy"
-    print(units, "->", decision)
-
-
-print("\n" + "=" * 60)
-print("Q2 - OTP VERIFICATION")
-print("=" * 60)
-
-correct_otp = "2468"
-otp_list = ["", "1111", "2222", "3333"]
-attempts = 0
-
-for otp in otp_list:
-    if otp == "":
-        print("Blank entry - not counted")
-        continue
-    if otp == correct_otp:
-        print("OTP verified")
-        break
-    attempts += 1
-    print("Incorrect OTP")
-else:
-    if attempts == 3:
-        print("Account locked for 30 minutes")
-
-
-print("\n" + "=" * 60)
-print("Q3 - VEHICLE REGISTRATION VALIDATOR")
-print("=" * 60)
-
-def normalize(text):
-    return text.strip().replace(" ", "").replace("-", "").upper()
-
-def valid(reg):
-    if len(reg) not in (9, 10):
-        return False
-    if not reg[:2].isalpha() or not reg[2:4].isdigit():
-        return False
-    series = reg[4:-4]
-    return series.isalpha() and reg[-4:].isdigit()
-
-samples = [
-    "tn 09 ab 1234",
-    "KA-01-M-0007",
-    "TN9AB1234",
-    "TN 22 1234 AB",
-    "mh 12 x 9876",
-    "AP-39-CD-4567"
-]
-
-for raw in samples:
-    reg = normalize(raw)
-    if valid(reg):
-        print(raw, "-> VALID")
-        print("Receipt:", reg[:2], reg[2:4], reg[4:-4], reg[-4:])
-    else:
-        print(raw, "-> INVALID")
-
-
-print("\n" + "=" * 60)
-print("Q4 - STRING CONCATENATION VS JOIN")
-print("=" * 60)
-
-def build_plus(items):
-    result = ""
-    for item in items:
-        result += item + ";"
-    return result
-
-def build_join(items):
-    return ";".join(items) + ";"
-
-def build_fstring(n):
-    items = [f"Item{i}:Rs{i % 50}" for i in range(n)]
-    return ";".join(items) + ";"
-
-def benchmark(n):
-    items = [f"Item{i}:Rs{i % 50}" for i in range(n)]
-    methods = [
-        ("Plus", lambda: build_plus(items)),
-        ("Join", lambda: build_join(items)),
-        ("F-string", lambda: build_fstring(n))
-    ]
-
-    for name, func in methods:
-        times = []
-        for _ in range(3):
-            start = time.perf_counter()
-            result = func()
-            times.append(time.perf_counter() - start)
-        print(name, "Average:", round(mean(times), 5), "sec")
-
-    print("Same output:", build_plus(items) == build_join(items))
-
-for n in (1000, 10000, 200000):
-    print("\nItems:", n)
-    benchmark(n)
-
-
-print("\n" + "=" * 60)
-print("Q5 - FUNCTIONS, PARAMETERS AND SCOPE")
-print("=" * 60)
-
-def buggy_order(item, order=[]):
-    order.append(item)
-    return order
-
-def safe_order(item, order=None):
-    if order is None:
-        order = []
-    order.append(item)
-    return order
-
-print("Buggy:", buggy_order("Tea"), buggy_order("Vada"))
-print("Safe:", safe_order("Tea"), safe_order("Vada"))
-
-customer1 = safe_order("Tea")
-customer2 = safe_order("Vada")
-customer3 = safe_order("Coffee")
-print("Customers:", customer1, customer2, customer3)
-
-def price(item, amount, quantity=1):
-    return amount * quantity
-
-print("Price:", price("Tea", 10))
-print("Price:", price("Vada", 15, 2))
-
-def bill(amount, gst=0.05):
-    tax = amount * gst
-    return amount + tax, tax
-
-total, tax = bill(200)
-print("Total:", total, "GST:", tax)
-
-message = "Global message"
-def show():
-    message = "Local message"
-    print(message)
-
-show()
-print(message)
-
-def counter():
-    count = 0
-    def increase():
-        nonlocal count
-        count += 1
-        return count
-    return increase
-
-c = counter()
-print("Counter:", c(), c())
-
-visits = 0
-def record():
-    global visits
-    visits += 1
-
-record()
-print("Visits:", visits)
-
-
-print("\n" + "=" * 60)
-print("Q6 - STAIRCASE RECURSION")
-print("=" * 60)
-
-def ways_naive(n):
-    if n <= 1:
-        return 1
-    return ways_naive(n-1) + ways_naive(n-2)
-
-@lru_cache(None)
-def ways_memo(n):
-    if n <= 1:
-        return 1
-    return ways_memo(n-1) + ways_memo(n-2)
-
-def ways_loop(n):
-    a, b = 1, 1
-    for _ in range(2, n+1):
-        a, b = b, a+b
-    return b
-
-for n in range(1, 7):
-    print("Steps:", n, "Ways:", ways_loop(n))
-
-print("Naive n=20:", ways_naive(20))
-print("Memo n=100:", ways_memo(100))
-print("Loop n=1000:", ways_loop(1000))
-
-
-print("\n" + "=" * 60)
-print("Q7 - PERFORMANCE REDESIGN")
-print("=" * 60)
 
 def original_plus(items):
     result = ""
@@ -225,16 +9,19 @@ def original_plus(items):
     return result
 
 def redesigned_join(items):
-    return ";".join(items) + ";"
+    parts = []
+    for item in items:
+        parts.append(item)
+    return ";".join(parts) + ";"
 
-def measure(func, items):
+def measure(func, items, repeats=3):
     times = []
-    result = ""
-    for _ in range(3):
+    output = None
+    for _ in range(repeats):
         start = time.perf_counter()
-        result = func(items)
+        output = func(items)
         times.append(time.perf_counter() - start)
-    return result, mean(times)
+    return output, mean(times)
 
 for n in (1000, 10000, 200000):
     items = [f"Item{i}:Rs{i % 50}" for i in range(n)]
@@ -244,11 +31,10 @@ for n in (1000, 10000, 200000):
 
     print("\nItems:", n)
     print("Same output:", old_output == new_output)
-    print("Original average:", round(old_time, 5), "sec")
-    print("Redesigned average:", round(new_time, 5), "sec")
+    print("Original average:", round(old_time, 6), "seconds")
+    print("Redesigned average:", round(new_time, 6), "seconds")
 
     if new_time > 0:
-        print("Speed-up:", round(old_time/new_time, 2), "x")
+        print("Speed-up ratio:", round(old_time / new_time, 2), "x")
 
-print("\nALL Q1 TO Q7 COMPLETED")
-
+print("\nQ7 completed")
