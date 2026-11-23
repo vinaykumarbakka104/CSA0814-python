@@ -1,1 +1,39 @@
+import time
+from statistics import mean
 
+def original_plus(items):
+    result = ""
+    for item in items:
+        result += item + ";"
+    return result
+
+def redesigned_join(items):
+    parts = []
+    for item in items:
+        parts.append(item)
+    return ";".join(parts) + ";"
+
+def measure(func, items, repeats=3):
+    times = []
+    output = None
+    for _ in range(repeats):
+        start = time.perf_counter()
+        output = func(items)
+        times.append(time.perf_counter() - start)
+    return output, mean(times)
+
+for n in (1000, 10000, 200000):
+    items = [f"Item{i}:Rs{i % 50}" for i in range(n)]
+
+    old_output, old_time = measure(original_plus, items)
+    new_output, new_time = measure(redesigned_join, items)
+
+    print("\nItems:", n)
+    print("Same output:", old_output == new_output)
+    print("Original average:", round(old_time, 6), "seconds")
+    print("Redesigned average:", round(new_time, 6), "seconds")
+
+    if new_time > 0:
+        print("Speed-up ratio:", round(old_time / new_time, 2), "x")
+
+print("\nQ7 completed")
