@@ -4,81 +4,78 @@ master = {}
 events = {}
 errors = []
 
-data = [
-    "192512001,Vinay,ECE,vinay@gmail.com,Music;Dance",
-    "192512002,Ravi,CSE,ravi@gmail.com,Sports;Music",
-    "192512003,Arun,EEE,arun@gmail.com,Dance",
-    "192512001,Vinay,ECE,vinay@gmail.com,Music",
-    "192512004,Ram,MECH,invalidemail,Sports",
-    "192512005,Sam,CSE,sam@gmail.com,Quiz",
-    "192512006,John,CIVIL,john@gmail.com,",
-    "Invalid line"
-]
-
 def validate(line):
-    p = [x.strip() for x in line.split(",")]
+    parts = [p.strip() for p in line.strip().split(",")]
 
-    if len(p) != 5:
+    if len(parts) != 5:
         raise ValueError("Expected 5 fields")
 
-    reg, name, dept, email, event = p
+    reg, name, dept, email, event_text = parts
 
     if not reg or not name or not dept:
-        raise ValueError("Empty required field")
+        raise ValueError("Required fields missing")
 
     if email.count("@") != 1 or "." not in email.split("@")[1]:
         raise ValueError("Invalid email")
 
-    return reg, name, dept, email, event
+    return reg, name, dept, email, event_text.split(";")
 
-for line_no, line in enumerate(data, 1):
+def process_file(filename):
     try:
-        reg, name, dept, email, event = validate(line)
+        with open(filename, "r") as f:
+            for line_no, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
 
-        if reg in master:
-            raise ValueError("Duplicate registration")
+                try:
+                    reg, name, dept, email, event_list = validate(line)
 
-        master[reg] = [name, dept, email, event]
+                    if reg in master:
+                        raise ValueError("Duplicate registration")
 
-        for e in event.split(";"):
-            e = e.strip()
-            if e:
-                events.setdefault(e, []).append(reg)
+                    master[reg] = [name, dept, email, event_list]
 
-    except ValueError as err:
-        errors.append((line_no, line, str(err)))
+                    for event in event_list:
+                        event = event.strip()
+                        if event:
+                            events.setdefault(event, []).append(reg)
 
-# Master report
+                except ValueError as e:
+                    errors.append(f"{filename} Line {line_no}: {e}")
+
+    except Exception as e:
+        errors.append(f"{filename}: {e}")
+
+# Input files
+files = ["cse.txt", "ece.txt", "eee.txt", "mech.txt", "civil.txt"]
+
+for f in files:
+    process_file(f)
+
+# Master list
 with open("master.csv", "w", newline="") as f:
     w = csv.writer(f)
     w.writerow(["Register", "Name", "Department", "Email", "Events"])
-    for reg, details in master.items():
-        w.writerow([reg] + details)
+    for reg, data in master.items():
+        w.writerow([reg, data[0], data[1], data[2], ";".join(data[3])])
 
-# Event reports
-for event, members in events.items():
+# Event-wise lists
+for event, students in events.items():
     with open(event + ".csv", "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Register", "Name", "Department", "Email"])
-        for reg in members:
-            w.writerow([reg, master[reg][0], master[reg][1],
-                        master[reg][2]])
+        w.writerow(["Register Number"])
+        w.writerows([[s] for s in students])
 
 # Summary
 with open("summary.txt", "w") as f:
-    f.write("Accepted Registrations: " + str(len(master)) + "\n")
-    f.write("Total Events: " + str(len(events)) + "\n")
-    for event, members in events.items():
-        f.write(event + ": " + str(len(members)) + "\n")
+    f.write(f"Total Registrations: {len(master)}\n")
+    f.write(f"Total Events: {len(events)}\n")
 
 # Error log
 with open("errors.txt", "w") as f:
-    for no, line, reason in errors:
-        f.write(f"Line {no}: {reason} | {line}\n")
+    for error in errors:
+        f.write(error + "\n")
 
-print("Registration Processing Completed")
+print("Registration processing completed!")
 print("Accepted:", len(master))
 print("Rejected:", len(errors))
-print("\nEvent Participants:")
-for event, members in events.items():
-    print(event, ":", len(members))
