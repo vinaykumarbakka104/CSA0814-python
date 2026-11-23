@@ -1,1 +1,39 @@
+import re
 
+def normalize_phone(phone):
+    digits = re.sub(r'\D', '', phone)
+    return digits[-10:] if len(digits) >= 10 else digits
+
+def merge_contacts(contacts):
+    merged = {}
+
+    for c in contacts:
+        name = c["name"]
+        phones = {normalize_phone(p) for p in c["phones"]}
+        emails = {e.lower() for e in c["emails"]}
+
+        key = next((p for p in phones if p in merged), None)
+
+        if key is None:
+            key = name
+            merged[key] = {"name": name, "phones": set(), "emails": set()}
+
+        merged[key]["phones"].update(phones)
+        merged[key]["emails"].update(emails)
+
+    return merged.values()
+
+contacts = [
+    {"name": "Ravi", "phones": ["9840012345"], "emails": ["ravi@gmail.com"]},
+    {"name": "Ravi Kumar", "phones": ["+91 9840012345", "24567890"],
+     "emails": ["rkumar@gmail.com"]},
+    {"name": "Suresh Kumar", "phones": ["9123456780"],
+     "emails": ["suresh@gmail.com"]},
+    {"name": "Suresh Kumar", "phones": ["9988776655"],
+     "emails": ["suresh2@gmail.com"]}
+]
+
+result = merge_contacts(contacts)
+
+for c in result:
+    print(c)
