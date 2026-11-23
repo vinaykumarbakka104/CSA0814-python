@@ -1,1 +1,84 @@
+import csv
 
+master = {}
+events = {}
+errors = []
+
+data = [
+    "192512001,Vinay,ECE,vinay@gmail.com,Music;Dance",
+    "192512002,Ravi,CSE,ravi@gmail.com,Sports;Music",
+    "192512003,Arun,EEE,arun@gmail.com,Dance",
+    "192512001,Vinay,ECE,vinay@gmail.com,Music",
+    "192512004,Ram,MECH,invalidemail,Sports",
+    "192512005,Sam,CSE,sam@gmail.com,Quiz",
+    "192512006,John,CIVIL,john@gmail.com,",
+    "Invalid line"
+]
+
+def validate(line):
+    p = [x.strip() for x in line.split(",")]
+
+    if len(p) != 5:
+        raise ValueError("Expected 5 fields")
+
+    reg, name, dept, email, event = p
+
+    if not reg or not name or not dept:
+        raise ValueError("Empty required field")
+
+    if email.count("@") != 1 or "." not in email.split("@")[1]:
+        raise ValueError("Invalid email")
+
+    return reg, name, dept, email, event
+
+for line_no, line in enumerate(data, 1):
+    try:
+        reg, name, dept, email, event = validate(line)
+
+        if reg in master:
+            raise ValueError("Duplicate registration")
+
+        master[reg] = [name, dept, email, event]
+
+        for e in event.split(";"):
+            e = e.strip()
+            if e:
+                events.setdefault(e, []).append(reg)
+
+    except ValueError as err:
+        errors.append((line_no, line, str(err)))
+
+# Master report
+with open("master.csv", "w", newline="") as f:
+    w = csv.writer(f)
+    w.writerow(["Register", "Name", "Department", "Email", "Events"])
+    for reg, details in master.items():
+        w.writerow([reg] + details)
+
+# Event reports
+for event, members in events.items():
+    with open(event + ".csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Register", "Name", "Department", "Email"])
+        for reg in members:
+            w.writerow([reg, master[reg][0], master[reg][1],
+                        master[reg][2]])
+
+# Summary
+with open("summary.txt", "w") as f:
+    f.write("Accepted Registrations: " + str(len(master)) + "\n")
+    f.write("Total Events: " + str(len(events)) + "\n")
+    for event, members in events.items():
+        f.write(event + ": " + str(len(members)) + "\n")
+
+# Error log
+with open("errors.txt", "w") as f:
+    for no, line, reason in errors:
+        f.write(f"Line {no}: {reason} | {line}\n")
+
+print("Registration Processing Completed")
+print("Accepted:", len(master))
+print("Rejected:", len(errors))
+print("\nEvent Participants:")
+for event, members in events.items():
+    print(event, ":", len(members))
